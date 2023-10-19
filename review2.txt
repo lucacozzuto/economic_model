@@ -1,0 +1,2 @@
+tax-rate      1.009       1.011    0.001
+initial-labor-price 1 1 0
