@@ -258,7 +258,9 @@ to setup
   setup-nobles
   setup-firms
   setup-farms
-  setup-government
+  if government-features = true [setup-government]
+  if government-features = false [set tax-rate 1]
+  if foreign-market-features = true [setup-foreign-market]
   set initial-food-prices2 mean [price] of farms
   set initial-good-prices2 mean [price] of firms
   set initial-service-prices2 mean [price] of bourgeoisie
@@ -306,7 +308,7 @@ to setup-bourgeoisie
     set price random-normal initial-service-price (initial-service-price / distribution)
     set kids random-normal (reproduction / 2) (reproduction / distribution)
     set productivity round random-normal service-productivity (service-productivity / distribution)
-    set previous-wealth ( wealth - (wealth / 5))
+    set previous-wealth (wealth / 5)
     set owner? false
   ]
   let cities patches with [pcolor = yellow]
@@ -330,7 +332,7 @@ to setup-nobles
     set shape "person"
     setxy random-xcor random-ycor
     set wealth random-normal (initial-household-wealth * nobles-ratio-wealth) (initial-household-wealth * nobles-ratio-wealth / distribution)
-    set previous-wealth (wealth - (wealth / 10))
+    set previous-wealth (wealth / 10)
   ]
 end
 
@@ -379,7 +381,7 @@ to setup-farms
       set profits 0
       set capital random-normal initial-capital (initial-capital / distribution)
       set labor-price random-normal initial-labor-price (initial-labor-price / distribution)
-      set productivity 5
+      set productivity 3
       set max-labor (round ((total-needs / total-pastures) / 3))
       set price ((labor-price / productivity) + random-float markup)
     ]
@@ -430,6 +432,7 @@ to go
   set labor-income-value 0
   set land-income-value 0
   set service-income-value 0
+  set profit-income-value 0
 
 
 ;  set inflation 0
@@ -444,7 +447,7 @@ to go
   run-service-market
   run-dividends
   run-price-adjustment
-  run-government
+  if government-features = true [run-government]
   run-substitution
   tick
 end
@@ -859,7 +862,6 @@ to run-service-market
   let minimum-price min [price] of bourgeoisie
   let demand consumers with [ (wealth > mean-price) and (desires > 0) ]
   let supply bourgeoisie with [(service > 0)] ; and (owner? = false)
-  ask supply [set previous-wealth wealth]
                                               ;; SERVICE MARKET
   while [any? demand] [
     ask demand [
@@ -928,16 +930,10 @@ to run-dividends
   set profit-check 0
   set dividends-check 0
 
-
-  ask nobles [
+    let households turtles with [(color = orange) or (color = "blue") and (shape = "person") ]
+  ask households [
     set previous-wealth wealth
   ]
-  ask firms [
-    ask out-own-neighbors [
-      set previous-wealth wealth
-    ]
-  ]
-
 
   ;; farms
   ask farms [
@@ -973,14 +969,14 @@ to run-dividends
   if any? profitable [
     set profit-check (profit-check + 1)
     ask profitable [
+      set aggregate-profits (aggregate-profits + profits)
+    ; set GDP-income (GDP-income + profits) ?
       let min-dividends (profits / 2)
       let random-dividends (random (profits / 2))
       let dividends (min-dividends + random-dividends)
       if color = orange [
-        ifelse capital > (trans-cost * (safe-zone * 2)) [
+        if capital > (trans-cost * (safe-zone * 2)) [
           set dividends ( capital - (trans-cost * (safe-zone * 2)))
-        ] [
-          set dividends random-float min-dividends
         ]
         set dividends-check (dividends-check + 1)
         set aggregate-firm-profits (aggregate-firm-profits + profits)
@@ -988,13 +984,11 @@ to run-dividends
         ]
       if color = violet [
         let limit (max-labor * labor-price)
-        ifelse capital > limit [
-          set dividends (dividends + (capital - limit))] [
-          set dividends min-dividends ]
+        if capital > limit [ set dividends (dividends + (capital - limit))]
         set aggregate-farm-profits (aggregate-farm-profits + profits)
         set aggregate-farm-dividends (aggregate-farm-dividends + dividends)
         set dividends-check (dividends-check + 1)
-        ]
+       ]
       set aggregate-dividends (aggregate-dividends + dividends)
       set aggregate-profits (aggregate-profits + profits)
       set GDP-income (GDP-income + dividends)
@@ -1246,8 +1240,8 @@ GRAPHICS-WINDOW
 7
 -7
 7
-1
-1
+0
+0
 1
 ticks
 60.0
@@ -1792,16 +1786,16 @@ Shares of GDP
 NIL
 NIL
 0.0
-1.0
+10.0
 0.0
-1.0
+10.0
 true
 true
 "" ""
 PENS
-"Goods" 1.0 0 -955883 true "plot goods-income-value" "plot (goods-income-value / GDP-spending)"
-"Services" 1.0 0 -1184463 true "plot service-income-value" "plot (service-income-value / GDP-spending)"
-"Land" 1.0 0 -13840069 true "plot land-income-value" "plot (land-income-value / GDP-spending)"
+"Total income from goods" 1.0 0 -955883 true "plot goods-income-value" "plot goods-income-value"
+"Total income from services" 1.0 0 -1184463 true "plot service-income-value" "plot service-income-value"
+"Total income from land" 1.0 0 -13840069 true "plot land-income-value" "plot land-income-value"
 
 PLOT
 1191
@@ -1822,8 +1816,6 @@ PENS
 "bourgeoisie" 1.0 0 -955883 true "plot mean [wealth] of bourgeoisie" "plot mean [wealth] of bourgeoisie"
 "nobles" 1.0 0 -11221820 true "plot mean [wealth] of nobles" "plot mean [wealth] of nobles"
 "workers" 1.0 0 -2674135 true "plot mean [wealth] of workers" "plot mean [wealth] of workers"
-"firms" 1.0 0 -6459832 true "" "plot mean [capital] of firms"
-"farms" 1.0 0 -5825686 true "" "plot mean [capital] of farms"
 
 MONITOR
 277
@@ -1888,6 +1880,26 @@ TEXTBOX
 government
 11
 0.0
+1
+
+CHOOSER
+436
+377
+579
+422
+government-features
+government-features
+true false
+0
+
+CHOOSER
+439
+533
+572
+578
+foreign-market-features
+foreign-market-features
+true false
 1
 
 MONITOR
@@ -1965,6 +1977,46 @@ PENS
 "Goods price" 1.0 0 -13840069 true "plot mean [price] of firms" "plot mean [price] of firms"
 "Food Price" 1.0 0 -14070903 true "plot mean [price] of farms" "plot mean [price] of farms"
 "Labor Price" 1.0 0 -2674135 true "plot mean [labor-price] of workers" "plot mean [labor-price] of workers"
+
+TEXTBOX
+290
+543
+440
+561
+foreign-market (obsolete)
+11
+0.0
+1
+
+CHOOSER
+579
+533
+709
+578
+initial-foreing-percentage
+initial-foreing-percentage
+0.05 0.1 0.15 0.2 0.3
+0
+
+CHOOSER
+718
+532
+856
+577
+change-chance
+change-chance
+0.2 0.3 0.5 0.7
+0
+
+CHOOSER
+862
+533
+1000
+578
+foreing-markup
+foreing-markup
+1 2 3 4
+3
 
 MONITOR
 6
@@ -2049,7 +2101,7 @@ INPUTBOX
 550
 164
 initial-labor-price
-15.0
+6.0
 1
 0
 Number
@@ -2070,7 +2122,7 @@ INPUTBOX
 681
 165
 initial-household-wealth
-10.0
+5.0
 1
 0
 Number
@@ -2092,7 +2144,7 @@ INPUTBOX
 920
 165
 nobles-ratio-wealth
-500.0
+100.0
 1
 0
 Number
@@ -2136,7 +2188,7 @@ INPUTBOX
 729
 231
 price-change-chance
-0.2
+0.7
 1
 0
 Number
@@ -2175,6 +2227,17 @@ service-productivity
 Number
 
 INPUTBOX
+775
+308
+889
+368
+trans-cost-multiplier
+250.0
+1
+0
+Number
+
+INPUTBOX
 807
 237
 872
@@ -2203,6 +2266,17 @@ INPUTBOX
 297
 initial-industrial-productivity
 15.0
+1
+0
+Number
+
+INPUTBOX
+437
+308
+496
+368
+trans-cost
+2500.0
 1
 0
 Number
@@ -2241,10 +2315,10 @@ industrial-switch-probability
 Number
 
 INPUTBOX
-438
-378
-551
-438
+583
+377
+696
+437
 government-demand
 0.2
 1
@@ -2252,10 +2326,10 @@ government-demand
 Number
 
 INPUTBOX
-557
-377
-701
-437
+702
+376
+846
+436
 percent-government-workers
 0.05
 1
@@ -2263,10 +2337,10 @@ percent-government-workers
 Number
 
 INPUTBOX
-708
-376
-764
-436
+853
+375
+909
+435
 tax-rate
 1.01
 1
@@ -2274,10 +2348,10 @@ tax-rate
 Number
 
 INPUTBOX
-770
-375
-925
-435
+915
+374
+1070
+434
 government-initial-wealth
 10000.0
 1
@@ -2312,7 +2386,7 @@ INPUTBOX
 675
 507
 distance-setup
-5.0
+10.0
 1
 0
 Number
@@ -2327,114 +2401,6 @@ service-distance-multiplier
 1
 0
 Number
-
-MONITOR
-208
-562
-349
-607
-NIL
-aggregate-farm-profits
-2
-1
-11
-
-MONITOR
-250
-499
-346
-544
-GDP difference
-GDP-spending - GDP-income
-2
-1
-11
-
-MONITOR
-284
-402
-341
-447
-NIL
-deficit
-2
-1
-11
-
-INPUTBOX
-430
-309
-500
-369
-trans-cost
-1000.0
-1
-0
-Number
-
-MONITOR
-364
-562
-484
-607
-NIL
-profit-income-value
-2
-1
-11
-
-MONITOR
-493
-563
-627
-608
-NIL
-landlord-income-value
-2
-1
-11
-
-MONITOR
-667
-561
-768
-606
-NIL
-dividends-check
-1
-1
-11
-
-MONITOR
-786
-559
-865
-604
-NIL
-profit-check
-1
-1
-11
-
-PLOT
-589
-1112
-1191
-1482
-Shares of income GDP
-NIL
-NIL
-0.0
-1.0
-0.0
-1.0
-true
-true
-"" ""
-PENS
-"labor" 1.0 0 -2674135 true "" "plot (labor-income-value / GDP-income)"
-"profits" 1.0 0 -817084 true "" "plot (profit-income-value / GDP-income)"
-"landlords" 1.0 0 -13345367 true "" "plot (landlord-income-value / GDP-income)"
 
 @#$#@#$#@
 ## MISSING
@@ -2789,310 +2755,6 @@ NetLogo 6.2.0
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
-<experiments>
-  <experiment name="testing1" repetitions="8" sequentialRunOrder="false" runMetricsEveryStep="true">
-    <setup>setup</setup>
-    <go>go</go>
-    <final>export-world ( word "testing1" random-float 1.0 ".csv")</final>
-    <timeLimit steps="200"/>
-    <metric>starting-seed</metric>
-    <metric>mean [price] of farms</metric>
-    <metric>mean [price] of firms</metric>
-    <metric>mean [price] of bourgeoisie</metric>
-    <metric>count workers with [unemployed? = false]</metric>
-    <metric>count workers with [unemployed? = true]</metric>
-    <metric>count workers with [state? = true]</metric>
-    <metric>count workers with [firm? = true ]</metric>
-    <metric>count workers with [farm? = true]</metric>
-    <metric>mean [salary] of workers</metric>
-    <metric>mean [labor-price] of firms</metric>
-    <metric>mean [labor-price] of farms</metric>
-    <metric>mean [wealth] of bourgeoisie</metric>
-    <metric>mean [wealth] of nobles</metric>
-    <metric>mean [wealth] of workers</metric>
-    <metric>goods-income-value</metric>
-    <metric>service-income-value</metric>
-    <metric>count firms</metric>
-    <metric>count firms with [industry? = true]</metric>
-    <metric>mean [stock] of firms</metric>
-    <metric>mean [stock] of farms</metric>
-    <metric>count firms with [stock = 0]</metric>
-    <metric>aggregate-farm-production</metric>
-    <metric>aggregate-industry-production</metric>
-    <metric>aggregate-services</metric>
-    <metric>aggregate-metabolism</metric>
-    <metric>aggregate-goods-demand</metric>
-    <metric>aggregate-services-demand</metric>
-    <metric>aggregate-profits</metric>
-    <metric>aggregate-dividends</metric>
-    <metric>average-capital-firms</metric>
-    <metric>average-capital-farms</metric>
-    <metric>average-profits-firms</metric>
-    <metric>average-profits-farms</metric>
-    <metric>mean-profits-farms</metric>
-    <metric>mean-profit-firms</metric>
-    <metric>yearly-interest</metric>
-    <metric>industrialized-firms</metric>
-    <metric>failed-firms</metric>
-    <metric>new-firms</metric>
-    <metric>local-number</metric>
-    <metric>unemployed</metric>
-    <metric>employed</metric>
-    <metric>bonds-sold</metric>
-    <metric>kids-number</metric>
-    <metric>mean-firm-price</metric>
-    <metric>mean-farm-price</metric>
-    <metric>mean-salaries</metric>
-    <metric>mean-salaries-firm-workers</metric>
-    <metric>mean-salaries-farm-workers</metric>
-    <metric>mean-salaries-public-workers</metric>
-    <metric>taxes</metric>
-    <metric>GDP-income</metric>
-    <metric>GDP-spending</metric>
-    <metric>labor-income-value</metric>
-    <metric>land-income-value</metric>
-    <metric>profit-income-value</metric>
-    <metric>real-GDP-spending</metric>
-    <enumeratedValueSet variable="initial-labor-price">
-      <value value="15"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="initial-capital">
-      <value value="500"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="government-demand">
-      <value value="0.1"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="firm-labor">
-      <value value="20"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="foreing-markup">
-      <value value="1"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="nobles-ratio-wealth">
-      <value value="50"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="government-initial-wealth">
-      <value value="10000"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="markup">
-      <value value="3"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="number-of-nobles">
-      <value value="50"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="change-chance">
-      <value value="0.2"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="foreign-market-features">
-      <value value="false"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="tax-rate">
-      <value value="1.01"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="bourgeoisie-ratio-wealth">
-      <value value="30"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="number-of-coal">
-      <value value="5"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="trans-cost">
-      <value value="1500"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="trans-cost-multiplier">
-      <value value="150"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="price-change-chance">
-      <value value="0.3"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="service-distance-multiplier">
-      <value value="1.5"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="initial-household-wealth">
-      <value value="30"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="number-of-bourgeoisie">
-      <value value="1000"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="number-of-workers">
-      <value value="10000"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="firm-productivity">
-      <value value="6"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="time">
-      <value value="100"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="reproduction">
-      <value value="250"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="industrial-switch-probability">
-      <value value="0.2"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="number-of-cities">
-      <value value="10"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="percent-government-workers">
-      <value value="0.05"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="initial-foreing-percentage">
-      <value value="0.05"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="safe-zone">
-      <value value="0.3"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="number-of-firms">
-      <value value="500"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="distribution">
-      <value value="4"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="initial-service-price">
-      <value value="15"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="service-productivity">
-      <value value="10"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="price-delta">
-      <value value="0.2"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="government-features">
-      <value value="true"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="distance-setup">
-      <value value="5"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="firm-industrial-labor">
-      <value value="100"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="initial-industrial-productivity">
-      <value value="15"/>
-    </enumeratedValueSet>
-  </experiment>
-  <experiment name="experiment" repetitions="1" runMetricsEveryStep="true">
-    <setup>setup</setup>
-    <go>go</go>
-    <timeLimit steps="100"/>
-    <metric>count turtles</metric>
-    <steppedValueSet variable="starting-seed" first="1" step="1" last="10"/>
-    <enumeratedValueSet variable="government-demand">
-      <value value="0.2"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="firm-labor">
-      <value value="25"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="initial-labor-price">
-      <value value="6"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="foreing-markup">
-      <value value="4"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="nobles-ratio-wealth">
-      <value value="100"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="government-initial-wealth">
-      <value value="10000"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="trans-cost-multiplier">
-      <value value="250"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="starting-seed">
-      <value value="1"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="markup">
-      <value value="2"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="number-of-nobles">
-      <value value="100"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="change-chance">
-      <value value="0.2"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="foreign-market-features">
-      <value value="false"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="tax-rate">
-      <value value="1.01"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="trans-cost">
-      <value value="2500"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="bourgeoisie-ratio-wealth">
-      <value value="30"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="number-of-coal">
-      <value value="5"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="price-change-chance">
-      <value value="0.7"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="service-distance-multiplier">
-      <value value="1.5"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="initial-household-wealth">
-      <value value="5"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="number-of-bourgeoisie">
-      <value value="2000"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="number-of-workers">
-      <value value="10000"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="firm-productivity">
-      <value value="6"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="time">
-      <value value="100"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="reproduction">
-      <value value="250"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="industrial-switch-probability">
-      <value value="0.2"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="number-of-cities">
-      <value value="15"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="percent-government-workers">
-      <value value="0.05"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="initial-foreing-percentage">
-      <value value="0.05"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="safe-zone">
-      <value value="0.3"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="number-of-firms">
-      <value value="500"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="distribution">
-      <value value="7"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="initial-service-price">
-      <value value="15"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="service-productivity">
-      <value value="10"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="price-delta">
-      <value value="0.3"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="government-features">
-      <value value="true"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="distance-setup">
-      <value value="10"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="firm-industrial-labor">
-      <value value="100"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="initial-industrial-productivity">
-      <value value="15"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="initial-capital">
-      <value value="500"/>
-    </enumeratedValueSet>
-  </experiment>
-</experiments>
 @#$#@#$#@
 @#$#@#$#@
 default
