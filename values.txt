@@ -1,1 +1,4 @@
-trans-cost	500	2500	1000
+initial-labor-price	1	1	0	
+markup	1.8	2.2	0.2
+initial-capital	450	550	50
+government-demand	0.09	0.11	0.01
