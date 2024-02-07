@@ -1,0 +1,5 @@
+batches: 1
+template: "$baseDir/template.xml"
+values: "$baseDir/values.txt"
+output: "$baseDir/test_output"
+
