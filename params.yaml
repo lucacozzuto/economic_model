@@ -1,7 +1,7 @@
 model: "${projectDir}/Industrial-Revolution.nlogo"
 maxcpus: 4
 repetitions: 1
-template: "$baseDir/template.xml"
-values: "$baseDir/values.txt"
-output: "$baseDir/test_output"
+template: "${projectDir}/template.xml"
+values: "${projectDir}/values.txt"
+output: "${projectDir}/test_output"
 

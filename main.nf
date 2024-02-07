@@ -8,7 +8,7 @@ nextflow.enable.dsl=2
 
  @authors
  Luca Cozzuto <lucacozzuto@gmail.com>
- Nicola Visonà <xxxx@gmail.com>
+ Nicola Visonà <n.visona@unimc.it>
 =========================================================== 
 */
 
@@ -25,9 +25,11 @@ log.info """
 ║╣ ║  ║ ║║║║
 ╚═╝╚═╝╚═╝╝╚╝                                                                                       
 ====================================================
-batches                     : ${params.batches}
+repetitions                 : ${params.repetitions}
+maxcpus                     : ${params.maxcpus}
 values                      : ${params.values}
 template                    : ${params.template}
+model                       : ${params.model}
 output (output folder)      : ${params.output}
 """
 
@@ -40,8 +42,7 @@ if (params.help) {
 if (params.resume) exit 1, "Are you making the classical --resume typo? Be careful!!!! ;)"
 
 
-nlogo = file("${projectDir}/Industrial-Revolution.nlogo")
-nlogo = file("${projectDir}/Industrial-Revolution.nlogo")
+nlogo = file(params.model)
 xmlfile = file(params.template)
 
 if( !nlogo.exists() ) exit 1, "Missing Industrial-Revolution.nlogo file!"
@@ -93,11 +94,20 @@ pipe_params.map {
 	
 }.transpose().set{reshaped_pars}
 
-n_batches = Channel.from( 1..params.batches )
+batches_r = (params.repetitions/params.maxcpus)
+batches = batches_r.round()
+real_rep = batches*params.maxcpus
+
+cpu_channel = Channel.of( params.maxcpus )
+
+
+println "We will do ${batches} batches: ${real_rep} repetitions!"
+
+n_batches = Channel.from( 1..batches )
 
 
 workflow {
-   xml_files = xmlMod (reshaped_pars, xmlfile)
+   xml_files = xmlMod (reshaped_pars.combine(cpu_channel), xmlfile)
    xml_files.combine(Experiments).combine(n_batches).map{
    		["${it[0]}__${it[5]}", it[1], it[2], it[3], it[4]]
    }.set{data_for_model}
@@ -108,7 +118,7 @@ workflow {
    }.groupTuple().set{files_pieces}
    
    concat_res = joinFiles(files_pieces)
-   makePlot(concat_res)
+//  makePlot(concat_res)
 //   res_model.groupTuple().view()
 }
 

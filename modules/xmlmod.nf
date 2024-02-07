@@ -4,7 +4,7 @@ process xmlMod {
     tag { "${par_name} on ${par_value}" }
     
     input:
-    tuple val(par_name), val(par_value)
+    tuple val(par_name), val(par_value), val(repetitions)
     path(setup)
     
     
@@ -13,7 +13,7 @@ process xmlMod {
     
 	script:
     """
-	make_xml.py -t ${setup} -n ${par_name}  -v ${par_value} -o ${par_name}_${par_value}_${setup}
+	make_xml.py -t ${setup} -n ${par_name} -r ${repetitions} -v ${par_value} -o ${par_name}_${par_value}_${setup}
 	"""
 }
 
