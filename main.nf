@@ -74,10 +74,10 @@ Channel
     }.set{ pipe_params}
 
 
-include { runModel } from "${baseDir}/modules/model.nf"
-include { xmlMod } from "${baseDir}/modules/xmlmod.nf"
-include { joinFiles } from "${baseDir}/modules/joinfiles.nf"
-include { makePlot } from "${baseDir}/modules/rplot.nf"
+include { runModel } from "${projectDir}/modules/model.nf"
+include { xmlMod } from "${projectDir}/modules/xmlmod.nf"
+include { joinFiles } from "${projectDir}/modules/joinfiles.nf"
+include { makePlot } from "${projectDir}/modules/rplot.nf"
 
 Experiments = Channel.of( "testing1" )
 
@@ -111,6 +111,7 @@ workflow {
    xml_files.combine(Experiments).combine(n_batches).map{
    		["${it[0]}__${it[5]}", it[1], it[2], it[3], it[4]]
    }.set{data_for_model}
+   
    res_model = runModel(data_for_model, nlogo)
    res_model.map{
    		def ids = it[0].split("__")
