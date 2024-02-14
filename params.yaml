@@ -3,5 +3,6 @@ maxcpus: 4
 repetitions: 1
 template: "${projectDir}/template.xml"
 values: "${projectDir}/values.txt"
+graph_params: "mean price of farms,mean price of firms,mean price of bourgeoisie,mean salary of workers"
 output: "${projectDir}/test_output"
 

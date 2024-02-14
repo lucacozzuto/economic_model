@@ -28,6 +28,7 @@ log.info """
 repetitions                 : ${params.repetitions}
 maxcpus                     : ${params.maxcpus}
 values                      : ${params.values}
+graph_params                : ${params.graph_params}
 template                    : ${params.template}
 model                       : ${params.model}
 output (output folder)      : ${params.output}
@@ -54,7 +55,7 @@ if( !values.exists() ) exit 1, "Missing values file: '${params.values}'. Specify
 
 
 outputfolder    	= "${params.output}"
-
+Channel.from(params.graph_params).set{graph_pars}
 
 // Create a channel for values 
 Channel
@@ -119,7 +120,7 @@ workflow {
    }.groupTuple().set{files_pieces}
    
    concat_res = joinFiles(files_pieces)
-//  makePlot(concat_res)
+   makePlot(concat_res.combine(graph_pars))
 //   res_model.groupTuple().view()
 }
 
