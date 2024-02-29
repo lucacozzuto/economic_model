@@ -14,6 +14,7 @@ def argparse_args():
 	parser = argparse.ArgumentParser(description='Change XML file')
 	parser.add_argument('-t', action='store', dest='template', help='xml template')
 	parser.add_argument('-o', action='store', dest='output', help='output.xml file')
+	parser.add_argument('-r', action='store', dest='repetitions', help='number of repetitions, default = 1', default=1)
 	parser.add_argument('-n', action='store', dest='param', help='name(s) of the param(s) which value has to be changed. They can be comma separated')
 	parser.add_argument('-v', action='store', dest='value', help='value(s) of the param(s) that has to be used. They can be comma separated')
 
@@ -24,7 +25,7 @@ def argparse_args():
 
 
 
-def parse_stats(file, ids, vals, outfile):
+def parse_stats(file, ids, vals, outfile, rep):
 
 	""" Parse xml file """
 
@@ -32,6 +33,9 @@ def parse_stats(file, ids, vals, outfile):
 	tree = ET.parse(file)
 	root = tree.getroot()
 	for child1 in root:
+		repetitions = child1.get('repetitions')
+		new_rep = rep
+		child1.set('repetitions', new_rep)
 		for child2 in child1:
 			variable = child2.get('variable')
 			if (variable in ids):
@@ -40,7 +44,7 @@ def parse_stats(file, ids, vals, outfile):
 				for child3 in child2:
 					value = child3.get('value')
 					child3.set('value', new_value)
-					print(child3.attrib)
+					#print(child3.attrib)
 	tree.write(outfile)
 	return 
 
@@ -50,4 +54,4 @@ if __name__ == "__main__":
 	args = argparse_args()
 	ids = args.param.split(",")
 	vals = args.value.split(",")
-	parse_stats(args.template, ids, vals, args.output)
+	parse_stats(args.template, ids, vals, args.output, args.repetitions)

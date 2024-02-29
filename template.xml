@@ -2,7 +2,7 @@
 <!DOCTYPE experiments SYSTEM "behaviorspace.dtd">  
 
 <experiments>
-<experiment name="testing1" repetitions="8" sequentialRunOrder="false" runMetricsEveryStep="true">
+<experiment name="testing1" repetitions="1" sequentialRunOrder="false" runMetricsEveryStep="true">
     <setup>setup</setup>
     <go>go</go>
     <final>export-world ( word "testing1" random-float 1.0 ".csv")</final>
@@ -14,7 +14,6 @@
     <metric>mean [salary] of workers</metric>
     <metric>mean [labor-price] of firms</metric>
     <metric>mean [labor-price] of farms</metric>
-    <metric>mean [wealth] of workers   </metric>
     <metric>mean [wealth] of bourgeoisie</metric>
     <metric>mean [wealth] of nobles</metric>
     <metric>average-capital-firms</metric>
@@ -50,19 +49,19 @@
     <metric>GDP-spending</metric>
     <metric>real-GDP-spending</metric>
     <enumeratedValueSet variable="initial-labor-price">
-      <value value="5"/>
+      <value value="15"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="initial-capital">
       <value value="500"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="government-demand">
-      <value value="0.2"/>
+      <value value="0.1"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="firm-labor">
-      <value value="25"/>
+      <value value="20"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="nobles-ratio-wealth">
-      <value value="100"/>
+      <value value="50"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="government-initial-wealth">
       <value value="10000"/>
@@ -83,25 +82,25 @@
       <value value="5"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="trans-cost">
-      <value value="1000"/>
+      <value value="1500"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="price-change-chance">
-      <value value="0.2"/>
+      <value value="0.3"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="service-distance-multiplier">
       <value value="1.5"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="initial-household-wealth">
-      <value value="15"/>
+      <value value="30"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="number-of-bourgeoisie">
-      <value value="2000"/>
+      <value value="1000"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="number-of-workers">
       <value value="10000"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="firm-productivity">
-      <value value="5"/>
+      <value value="6"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="time">
       <value value="100"/>

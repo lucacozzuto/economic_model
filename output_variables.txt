@@ -1,0 +1,23 @@
+#Prices
+
+mean price of bourgeoisie
+mean price of firms
+mean-farm-price
+mean-salaries
+
+#Wealth
+
+mean wealth of bourgeoisie
+mean wealth of workers
+mean wealth of nobles
+average-capital-farms
+average-capital-firms
+
+#Economy
+
+GDP-spending
+goods-income-value
+land-income-value
+labor-income-value
+service-income-value
+real-GDP-spending
