@@ -19,7 +19,7 @@ You can clone the repository by doing
 git clone git@github.com:lucacozzuto/economic_model.git
 ```
 
-## Installing the pipeline
+## Launching the pipeline
 
 Then you can launch it specifying either docker or singularity engines:
 
@@ -56,7 +56,7 @@ The file **values** contains the name of the parameters and their starting, fina
 
 ```
 PLOTS -> {PARAMETER_NAME}_{VALUE}_{PLOT_ID}.pdf 
-TXT   -> {PARAMETER_NAME}_{VALUE}_{PLOT_ID}._cat.txt 
+TXT   -> {PARAMETER_NAME}_{VALUE}_{PLOT_ID}_cat.txt 
 ```
 
 The default file for value is **values.txt** and will give those files as output:
@@ -72,7 +72,7 @@ initial-labor-price_15_2.pdf    initial-labor-price_5_cat.txt
 ```
 
 
-## Running the pipeline in a cluster
+## Running the pipeline in a HPC cluster
 We provide multiple configuration for running the pipeline in different environments. Just using different profiles will allow to use different specifications. For example running the pipeline in a SGE based cluster will be:
 
 ```
@@ -85,6 +85,11 @@ We provide the following possibilities:
 - sge
 - slurm
 - local
+
+## Pipeline description
+
+![Flow](https://github.com/lucacozzuto/economic_model/blob/main/img/flow.png?raw=true)
+
 
 
 
